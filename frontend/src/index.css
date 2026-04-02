@@ -1,0 +1,100 @@
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Space+Grotesk:wght@400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* The default theme is now "Forest" (formerly dark mode) */
+:root {
+  --bg-1: #162420;
+  --bg-2: #101815;
+  --card: rgba(24, 36, 31, 0.75);
+  --border: rgba(140, 180, 160, 0.2);
+  --text: #ffffff;
+
+  /* Tailwind rgb colors dark */
+  --ink: 255 255 255;
+  --mist: 20 32 27;
+  --lagoon: 130 168 152;
+  --sunrise: 246 189 96;
+  --roseleaf: 229 152 155;
+  --surface: 28 41 35;
+}
+
+:root[data-theme="ocean"] {
+  --bg-1: #0f172a; /* Slate 900 */
+  --bg-2: #020617; /* Slate 950 */
+  --card: rgba(15, 23, 42, 0.75);
+  --border: rgba(56, 189, 248, 0.2);
+  --text: #ffffff;
+
+  --ink: 255 255 255;
+  --mist: 15 23 42; 
+  --lagoon: 56 189 248; /* Sky 400 */
+  --sunrise: 250 204 21;
+  --roseleaf: 244 114 182; /* Pink 400 */
+  --surface: 30 41 59; /* Slate 800 */
+}
+
+:root[data-theme="sunset"] {
+  --bg-1: #2a1525;
+  --bg-2: #140510;
+  --card: rgba(42, 21, 37, 0.75);
+  --border: rgba(244, 114, 182, 0.2);
+  --text: #ffffff;
+
+  --ink: 255 255 255;
+  --mist: 35 15 28;
+  --lagoon: 251 146 60; /* Orange 400 */
+  --sunrise: 250 204 21;
+  --roseleaf: 244 63 94; /* Rose 500 */
+  --surface: 63 30 50;
+}
+
+:root[data-theme="amethyst"] {
+  --bg-1: #1c1528;
+  --bg-2: #0b0714;
+  --card: rgba(28, 21, 40, 0.75);
+  --border: rgba(167, 139, 250, 0.2);
+  --text: #ffffff;
+
+  --ink: 255 255 255;
+  --mist: 20 15 30;
+  --lagoon: 167 139 250; /* Purple 400 */
+  --sunrise: 244 114 182;
+  --roseleaf: 251 113 133;
+  --surface: 46 32 66;
+}
+
+body {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  transition: background 0.3s ease, color 0.3s ease;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255,255,255,0.03) 0%, transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(255,255,255,0.02) 0%, transparent 35%),
+    linear-gradient(140deg, var(--bg-1), var(--bg-2));
+}
+
+.glass {
+  background: var(--card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.scroll-slim::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+}
+
+.scroll-slim::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
