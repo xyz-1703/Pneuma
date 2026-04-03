@@ -63,7 +63,6 @@ class ChatResponse(BaseModel):
     emotion: str
     assistant_emotion: str
     intent: str
-    sentiment: str
     patterns: List[str]
 
 
@@ -75,7 +74,6 @@ async def chat(
 ) -> ChatResponse:
     text = payload.message.strip()
     user_emotion, emotion_confidence = emotion_service.detect_emotion(text)
-    sentiment = nlu_service.detect_sentiment(text)
     patterns = nlu_service.detect_patterns(text)
 
     history_rows: List[Message] = (
@@ -99,14 +97,9 @@ async def chat(
         user_message=text,
         history_text=history_text,
     )
-    contradiction = nlu_service.detect_contradiction(
-        emotion=user_emotion,
-        sentiment_label=str(sentiment["label"]),
-    )
     tone = resolve_tone(
         emotion=user_emotion,
         intent=intent,
-        sentiment_label=str(sentiment["label"]),
     )
 
     user_message = Message(
@@ -135,12 +128,8 @@ async def chat(
             user_message=text,
             emotion=user_emotion,
             emotion_confidence=emotion_confidence,
-            sentiment_label=str(sentiment["label"]),
-            sentiment_confidence=float(sentiment["confidence"]),
-            sentiment_intensity=str(sentiment["intensity"]),
             intent=intent,
             patterns=patterns,
-            contradiction_note=str(contradiction["note"]),
             tone=tone,
             history_text=history_text,
         )
@@ -153,10 +142,8 @@ async def chat(
                 "user_id": user_id,
                 "emotion": user_emotion,
                 "emotion_confidence": round(emotion_confidence, 3),
-                "sentiment": sentiment,
                 "intent": intent,
                 "patterns": patterns,
-                "contradiction": contradiction,
                 "risk_keywords": matched_keywords,
             },
             ensure_ascii=True,
@@ -180,7 +167,6 @@ async def chat(
         emotion=user_emotion,
         assistant_emotion=assistant_emotion,
         intent=intent,
-        sentiment=str(sentiment["label"]),
         patterns=patterns,
     )
 

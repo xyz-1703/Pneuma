@@ -44,18 +44,10 @@ def get_emotion_tone(emotion: str) -> str:
     return EMOTION_SYSTEM_TONES.get(emotion, EMOTION_SYSTEM_TONES["neutral"])
 
 
-def resolve_tone(emotion: str, intent: str, sentiment_label: str) -> str:
+def resolve_tone(emotion: str, intent: str) -> str:
     intent_tone = INTENT_TONE_OVERRIDES.get(intent, "Natural and supportive.")
     emotion_tone = get_emotion_tone(emotion)
-
-    if sentiment_label == "negative":
-        sentiment_tone = "Prioritize empathy and emotional safety."
-    elif sentiment_label == "positive":
-        sentiment_tone = "Keep a balanced, encouraging tone."
-    else:
-        sentiment_tone = "Stay neutral, attentive, and curious."
-
-    return f"{intent_tone} {emotion_tone} {sentiment_tone}"
+    return f"{intent_tone} {emotion_tone}"
 
 
 def build_chat_prompt_template() -> PromptTemplate:
@@ -63,10 +55,8 @@ def build_chat_prompt_template() -> PromptTemplate:
         "{system_rules}\n"
         "{datetime_context}\n"
         "Emotion signal: {emotion} (confidence={emotion_confidence}).\n"
-        "Sentiment signal: {sentiment_label} (confidence={sentiment_confidence}, intensity={sentiment_intensity}).\n"
         "Intent signal: {intent}.\n"
         "Pattern signals: {patterns}.\n"
-        "Contradiction check: {contradiction_note}.\n"
         "Tone guidance: {tone}.\n\n"
         "Conversation history:\n{history}\n\n"
         "Current user message:\n{user_message}\n\n"
@@ -86,12 +76,8 @@ def build_chat_prompt_template() -> PromptTemplate:
             "datetime_context",
             "emotion",
             "emotion_confidence",
-            "sentiment_label",
-            "sentiment_confidence",
-            "sentiment_intensity",
             "intent",
             "patterns",
-            "contradiction_note",
             "tone",
             "history",
             "user_message",

@@ -19,7 +19,14 @@ client.interceptors.request.use((config) => {
 
 function handleError(error) {
   const detail = error?.response?.data?.detail;
-  throw new Error(typeof detail === "string" ? detail : "Request failed");
+  const message = typeof detail === "string" ? detail : error?.message || "Request failed";
+  console.error("API Error:", {
+    status: error?.response?.status,
+    data: error?.response?.data,
+    message: message,
+    url: error?.config?.url,
+  });
+  throw new Error(message);
 }
 
 export function signup(email, password) {
@@ -82,9 +89,38 @@ export function getChatHistory() {
 }
 
 export function submitJournal(text) {
+  console.log("💾 Submitting journal entry...");
   return client
     .post("/journal", { text })
+    .then((response) => {
+      console.log("✅ Journal entry created:", response.data);
+      return response.data;
+    })
+    .catch(handleError);
+}
+
+export function getJournalHistory() {
+  console.log("📖 Fetching journal history from API...");
+  return client
+    .get("/journal")
+    .then((response) => {
+      console.log("✅ Journal history loaded:", response.data);
+      return response.data;
+    })
+    .catch(handleError);
+}
+
+export function updateJournal(entryId, text) {
+  return client
+    .put(`/journal/${entryId}`, { text })
     .then((response) => response.data)
+    .catch(handleError);
+}
+
+export function deleteJournal(entryId) {
+  return client
+    .delete(`/journal/${entryId}`)
+    .then(() => ({ success: true }))
     .catch(handleError);
 }
 
