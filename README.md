@@ -1,13 +1,15 @@
-# Safe AI Emotional Chat and Journal Platform
+# Pneuma: Safe AI Emotional Chat and Journal Platform
 
-A full-stack mental wellness application with emotion-aware AI chat, journaling insights, and mood analytics.
+A full-stack mental wellness application with emotion-aware AI chat, journaling insights, mood analytics, and a premium glassmorphic UI.
+
+> **Read the detailed technical workflow and data flow of this project in [PROJECT_WORKFLOW.md](./PROJECT_WORKFLOW.md)**
 
 ## Stack
 
-- Frontend: React (Vite), Tailwind CSS, Recharts
+- Frontend: React (Vite), Tailwind CSS, Recharts (with Custom Glassmorphism & Theme Engine)
 - Backend: FastAPI
 - AI/ML: Hugging Face Transformers (emotion detection), LangChain + Groq API (LLM responses)
-- Database: SQLite by default (switchable to PostgreSQL via DATABASE_URL)
+- Database: SQLite by default (switchable to PostgreSQL)
 
 ## Project Structure
 
@@ -33,11 +35,13 @@ A full-stack mental wellness application with emotion-aware AI chat, journaling 
 
 ## Features
 
-- Emotion-aware chat with memory (last 10 messages as context)
-- Journal analysis with AI-generated summary, insight, and suggestion
-- Mood tracking from chat and journal entries
-- Dashboard with line chart, pie chart, and weekly summary
-- Safety override for harmful language (self-harm, suicide keywords)
+- **Four Premium UI Themes**: Instantly switchable color modes (Midnight Gold, Ocean Glow, Sunset Aura, Aurora Neon).
+- **Emotion-Aware Chat**: Pneuma contextually remembers the last 10 messages and tailors its responses based on the AI-detected core emotion.
+- **Journal Analysis**: Deep reflection AI-generated summary, insight, and actionable suggestions.
+- **Advanced Dashboard**: Features a 7-day mood severity tracker, distribution pie chart, timeline, and weekly AI insights.
+- **Crisis Protocols**: 
+  - Immediate visual "Crisis Help" integration linking to primary Indian mental health helplines alongside emergency protocol triggers.
+  - LLM Safety algorithmic override for dangerous language.
 
 ## Backend Setup
 

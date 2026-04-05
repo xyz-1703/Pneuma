@@ -160,24 +160,7 @@ export default function Chat() {
           <div ref={endRef} className="h-4" />
         </div>
 
-        <div className="mt-2 pt-4 border-t border-ink/5">
-          <div className="flex flex-wrap gap-2 mb-4 animate-rise">
-            <span className="text-xs tracking-wider uppercase text-ink/40 font-bold mr-2 self-center">Suggested</span>
-            {[
-              "Let's try a breathing exercise",
-              "I want to talk about something else",
-              "I'm feeling better, thanks"
-            ].map((reply, i) => (
-              <button 
-                key={i}
-                onClick={() => onSend(reply)}
-                disabled={loading}
-                className="bg-surface/50 hover:bg-surface px-4 py-1.5 rounded-full text-[13px] font-bold text-ink/70 hover:text-ink border border-ink/10 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-sm active:scale-95"
-              >
-                {reply}
-              </button>
-            ))}
-          </div>
+        <div className="mt-4 pt-2">
           <MessageInput onSend={onSend} loading={loading} />
         </div>
       </div>
