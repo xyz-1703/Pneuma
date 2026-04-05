@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import Chat from "./pages/Chat";
 import Journal from "./pages/Journal";
 import Dashboard from "./pages/Dashboard";
+import AuthPage from "./components/AuthPage";
+import CrisisModal from "./components/CrisisModal";
 import {
   getAuthenticatedEmail,
   isAuthenticated,
@@ -17,31 +19,33 @@ const NAV_ITEMS = [
 ];
 
 const THEMES = [
-  { id: "forest", label: "🌲 Forest (Calm)" },
-  { id: "ocean", label: "🌊 Ocean (Relaxed)" },
-  { id: "sunset", label: "🌅 Sunset (Warm)" },
-  { id: "amethyst", label: "🔮 Amethyst (Deep)" },
+  { id: "midnight", label: "Midnight Gold" },
+  { id: "ocean", label: "Ocean Glow" },
+  { id: "sunset", label: "Sunset Aura" },
+  { id: "aurora", label: "Aurora Neon" },
 ];
 
 export default function App() {
   const [active, setActive] = useState("chat");
   const [authed, setAuthed] = useState(isAuthenticated());
   const [userEmail, setUserEmail] = useState(getAuthenticatedEmail());
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [authError, setAuthError] = useState("");
-  const [authLoading, setAuthLoading] = useState(false);
+  const [isCrisisModalOpen, setCrisisModalOpen] = useState(false);
   
-  // Default to forest theme
+  // Default to midnight theme
   const [currentTheme, setCurrentTheme] = useState(() => {
-    return localStorage.getItem("moodTheme") || "forest";
+    let saved = localStorage.getItem("moodTheme");
+    if (saved === "zen") saved = "midnight"; // Migrate old users
+    return saved || "midnight";
   });
 
   useEffect(() => {
     // Apply the active theme as a data attribute to the root HTML element
-    document.documentElement.setAttribute('data-theme', currentTheme);
-    // Keep 'dark' class permanently enabled for Tailwind class compatibilities if any
-    document.documentElement.classList.add('dark');
+    if (currentTheme === "midnight") {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', currentTheme);
+    }
+    document.documentElement.classList.add("dark");
     localStorage.setItem("moodTheme", currentTheme);
   }, [currentTheme]);
 
@@ -51,42 +55,10 @@ export default function App() {
     setCurrentTheme(THEMES[nextIndex].id);
   };
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password) {
-      setAuthError("Please enter both email and password.");
-      return;
-    }
-    setAuthError("");
-    setAuthLoading(true);
-    try {
-      const data = await login(email.trim(), password);
-      setAuthed(true);
-      setUserEmail(data.email || email.trim());
-      setActive("chat");
-    } catch (err) {
-      setAuthError(err.message || "Login failed");
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleSignup = async () => {
-    if (!email.trim() || !password) {
-      setAuthError("Please enter both email and password.");
-      return;
-    }
-    setAuthError("");
-    setAuthLoading(true);
-    try {
-      const data = await signup(email.trim(), password);
-      setAuthed(true);
-      setUserEmail(data.email || email.trim());
-      setActive("chat");
-    } catch (err) {
-      setAuthError(err.message || "Signup failed");
-    } finally {
-      setAuthLoading(false);
-    }
+  const handleAuthSuccess = (data) => {
+    setAuthed(true);
+    setUserEmail(data.user?.email || data.email || "");
+    setActive("chat");
   };
 
   const handleLogout = () => {
@@ -97,125 +69,76 @@ export default function App() {
   };
 
   if (!authed) {
-    return (
-      <div className="min-h-screen px-4 py-6 md:px-8 md:py-8">
-        <header className="mx-auto mb-6 w-full max-w-6xl rounded-2xl border border-lagoon/20 bg-surface/70 shadow-sm p-4 flex items-center justify-between">
-          <div>
-            <h1 className="font-heading text-2xl font-bold text-ink md:text-3xl">
-              Pneuma
-            </h1>
-            <p className="text-sm text-ink/70 mt-1">Login or create an account to access your private data.</p>
-          </div>
-          <button
-            onClick={toggleTheme}
-            title="Toggle Mood Theme"
-            className="flex items-center gap-2 rounded-full border border-lagoon/30 bg-surface px-4 py-2 hover:bg-mist cursor-pointer transition-colors shadow-sm active:scale-95"
-          >
-            <span className="text-sm font-medium text-ink">Theme</span>
-          </button>
-        </header>
-
-        <main className="mx-auto w-full max-w-md animate-rise">
-          <div className="glass rounded-2xl p-6 md:p-8 shadow-lg shadow-lagoon/5">
-            <h2 className="font-heading text-xl font-semibold text-ink">Welcome</h2>
-            <p className="mt-1 text-sm text-ink/70">Your chats, journals, and mood dashboard are securely saved.</p>
-
-            <div className="mt-6 space-y-4">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                className="w-full rounded-xl border border-lagoon/20 bg-surface/90 px-4 py-3 text-sm text-ink transition-all outline-none focus:border-lagoon focus:ring-2 focus:ring-lagoon/10"
-              />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                className="w-full rounded-xl border border-lagoon/20 bg-surface/90 px-4 py-3 text-sm text-ink transition-all outline-none focus:border-lagoon focus:ring-2 focus:ring-lagoon/10"
-              />
-            </div>
-
-            <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={handleLogin}
-                disabled={authLoading}
-                className="flex-1 rounded-xl bg-lagoon px-4 py-3 text-sm font-semibold text-white shadow-md shadow-lagoon/20 transition-transform active:scale-95 disabled:opacity-50"
-              >
-                {authLoading ? "Please wait..." : "Login"}
-              </button>
-              <button
-                type="button"
-                onClick={handleSignup}
-                disabled={authLoading}
-                className="flex-1 rounded-xl bg-surface px-4 py-3 text-sm font-semibold text-ink shadow-sm ring-1 ring-lagoon/20 transition-transform active:scale-95 disabled:opacity-50 hover:bg-mist"
-              >
-                Signup
-              </button>
-            </div>
-
-            {authError && <p className="mt-4 text-sm font-medium text-roseleaf text-center">{authError}</p>}
-          </div>
-        </main>
-      </div>
-    );
+    return <AuthPage onAuthSuccess={handleAuthSuccess} />;
   }
 
+  const currentThemeLabel = THEMES.find(t => t.id === currentTheme)?.label || "Theme";
+
   return (
-    <div className="min-h-screen px-4 py-6 md:px-8 md:py-8 text-ink">
-      <header className="mx-auto mb-6 flex w-full max-w-6xl flex-col gap-4 rounded-2xl border border-lagoon/20 bg-surface/70 shadow-sm p-4 md:p-6 md:flex-row md:items-center md:justify-between animate-rise">
-        <div>
-          <h1 className="font-heading text-2xl font-bold text-ink md:text-3xl">
+    <div className="min-h-screen px-4 py-8 md:px-8 text-ink">
+      <header className="glass mx-auto mb-8 flex w-full max-w-6xl flex-col gap-6 rounded-[2rem] p-6 md:flex-row md:items-center md:justify-between animate-rise">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-heading text-3xl font-bold bg-gradient-to-r from-accent to-roseleaf bg-clip-text text-transparent">
             Pneuma
           </h1>
-          <p className="text-sm text-ink/70 mt-2">
-            Emotion-aware support, reflection, and trend tracking in one safe space.
+          <p className="text-sm font-medium text-ink/60">
+            A safe space for emotion-aware reflection.
           </p>
         </div>
 
-        <nav className="flex flex-wrap gap-2 items-center">
+        <nav className="flex flex-wrap gap-3 items-center">
           <button
             onClick={toggleTheme}
-            title="Toggle Mood Theme"
-            className="flex items-center gap-2 rounded-full border border-lagoon/30 bg-surface px-4 py-2 hover:bg-mist cursor-pointer transition-colors shadow-sm active:scale-95 mr-2"
+            title={currentThemeLabel}
+            className="group flex items-center gap-2 rounded-full border border-ink/10 bg-surface/50 hover:bg-surface px-5 py-2 hover:shadow-glass cursor-pointer transition-all active:scale-95 duration-300"
           >
-            <span className="text-sm font-medium text-ink">Theme</span>
+            <span className="text-sm font-bold tracking-wide uppercase text-ink/80 group-hover:text-ink transition-colors">Theme</span>
           </button>
-          <span className="self-center rounded-xl bg-mist px-3 py-2 text-xs font-medium text-ink/80 ring-1 ring-lagoon/10">
-            {userEmail ? `Logged in as ${userEmail}` : "Logged in"}
-          </span>
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setActive(item.id)}
-              className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 ${
-                active === item.id
-                  ? "bg-lagoon text-white shadow-md shadow-lagoon/20 scale-105"
-                  : "bg-transparent text-ink hover:bg-lagoon/10 hover:text-lagoon"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-          <div className="w-px h-6 bg-lagoon/20 mx-2 hidden md:block"></div>
+          
+          <div className="flex gap-2 bg-surface/50 backdrop-blur-xl shadow-glass p-1 rounded-2xl border border-ink/5">
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActive(item.id)}
+                className={`rounded-xl px-5 py-2 text-sm font-bold transition-all duration-300 ease-out ${
+                  active === item.id
+                    ? "bg-accent text-white shadow-lg shadow-accent/30 scale-[1.02]"
+                    : "bg-transparent text-ink/70 hover:text-ink hover:bg-ink/5"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="w-px h-8 bg-ink/10 mx-2 hidden md:block"></div>
+          
+          <button
+            type="button"
+            onClick={() => setCrisisModalOpen(true)}
+            className="flex items-center gap-1.5 rounded-full bg-roseleaf/10 px-4 py-2 text-sm font-bold text-roseleaf border border-roseleaf/30 hover:bg-roseleaf hover:text-white hover:shadow-lg hover:shadow-roseleaf/20 transition-all duration-300 active:scale-95"
+          >
+            <span className="text-lg leading-none">❤️</span> Crisis Help
+          </button>
+
           <button
             type="button"
             onClick={handleLogout}
-            className="rounded-xl bg-surface px-4 py-2 text-sm font-semibold text-roseleaf ring-1 ring-roseleaf/20 hover:bg-roseleaf/10 transition-colors duration-200"
+            className="rounded-full bg-surface/50 px-4 py-2 text-sm font-semibold text-ink/70 border border-ink/10 hover:bg-ink/5 transition-all duration-300 active:scale-95"
           >
             Logout
           </button>
         </nav>
       </header>
 
-      <main>
+      <main className="mx-auto w-full max-w-6xl">
         {active === "chat" && <Chat />}
         {active === "journal" && <Journal />}
         {active === "dashboard" && <Dashboard />}
       </main>
+
+      <CrisisModal isOpen={isCrisisModalOpen} onClose={() => setCrisisModalOpen(false)} />
     </div>
   );
 }

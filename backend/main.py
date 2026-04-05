@@ -1,4 +1,5 @@
 import logging
+import os
 from dotenv import load_dotenv
 
 # Load .env FIRST before any other imports
@@ -48,6 +49,18 @@ async def healthcheck():
 def startup_checks() -> None:
     logger = logging.getLogger(__name__)
     logger.info("🚀 Starting up Pneuma application...")
+    
+    # Enable pgvector extension if using PostgreSQL
+    db_url = os.getenv("DATABASE_URL", "")
+    if "postgresql" in db_url or "postgres" in db_url:
+        try:
+            from sqlalchemy import text
+            with SessionLocal() as db:
+                db.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+                db.commit()
+                logger.info("✅ pgvector extension enabled")
+        except Exception as e:
+            logger.warning(f"⚠️  Could not enable pgvector: {e}")
     logger.info(f"✓ LLM Service: {type(llm_chain_service.llm)}")
     logger.info(f"✓ LLM is initialized: {llm_chain_service.llm is not None}")
     if llm_chain_service.llm is None:

@@ -8,42 +8,16 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models.db_models import JournalEntry, MoodLog
-from services.auth import decode_access_token
+from services.auth import get_current_user_id
 from services.emotion import emotion_service
+from services.embedding import get_embedding_service
+from services.context import get_semantic_journal_context
 from services.llm_chain import llm_chain_service
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 SAFETY_KEYWORDS = ["suicide", "self-harm", "kill myself", "end my life", "hurt myself"]
-
-
-def get_current_user_id(authorization: Optional[str] = Header(None)) -> int:
-    """Extract user_id from JWT token in Authorization header."""
-    if not authorization:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing authorization header",
-        )
-    
-    # Extract token from "Bearer <token>"
-    parts = authorization.split()
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authorization header format",
-        )
-    
-    token = parts[1]
-    token_data = decode_access_token(token)
-    
-    if not token_data or token_data.user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-        )
-    
-    return token_data.user_id
 
 
 class JournalRequest(BaseModel):
@@ -82,8 +56,17 @@ async def create_journal(
     logger.info(f"💾 Creating journal entry for user {user_id}")
     text = payload.text.strip()
     lowered = text.lower()
-    emotion, _ = emotion_service.detect_emotion(text)
-    logger.info(f"Detected emotion: {emotion}")
+    embedding_service = get_embedding_service()
+    
+    # Detect emotion
+    emotion, emotion_confidence = emotion_service.detect_emotion(text)
+    logger.info(f"Detected emotion: {emotion} (confidence: {emotion_confidence})")
+    
+    # Generate embedding
+    embedding = embedding_service.embed_text(text)
+    
+    # Get semantic journal context
+    journal_context = get_semantic_journal_context(user_id, text, db)
 
     if any(keyword in lowered for keyword in SAFETY_KEYWORDS):
         logger.warning(f"⚠️ Safety keyword detected in journal entry for user {user_id}")
@@ -94,12 +77,18 @@ async def create_journal(
         }
     else:
         logger.info("Running LLM journal analysis...")
-        insights = await llm_chain_service.run_journal_chain(text=text, emotion=emotion)
+        insights = await llm_chain_service.run_journal_chain(
+            text=text,
+            emotion=emotion,
+            journal_context=journal_context,
+            emotion_confidence=emotion_confidence
+        )
 
     entry = JournalEntry(
         user_id=user_id,
         text=text,
         emotion=emotion,
+        embedding=embedding,
         summary=insights["summary"],
         insight=insights["insight"],
         suggestion=insights["suggestion"],

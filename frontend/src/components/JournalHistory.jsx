@@ -30,52 +30,53 @@ export default function JournalHistory({ entries, selectedEntry, onSelectEntry, 
 
   const getEmotionBgColor = (emotion) => {
     const colors = {
-      happy: "from-amber-50 to-amber-100/50",
-      sad: "from-blue-50 to-blue-100/50",
-      angry: "from-red-50 to-red-100/50",
-      calm: "from-emerald-50 to-emerald-100/50",
-      anxious: "from-purple-50 to-purple-100/50",
-      neutral: "from-slate-50 to-slate-100/50",
+      happy: "from-sunrise/20 to-sunrise/5 border-sunrise/20",
+      sad: "from-lagoon/20 to-lagoon/5 border-lagoon/20",
+      angry: "from-roseleaf/20 to-roseleaf/5 border-roseleaf/20",
+      calm: "from-accent/20 to-accent/5 border-accent/20",
+      anxious: "from-roseleaf/10 to-roseleaf/5 border-roseleaf/10",
+      neutral: "from-ink/10 to-ink/5 border-ink/10",
     };
-    return colors[emotion?.toLowerCase()] || "from-slate-50 to-slate-100/50";
+    return colors[emotion?.toLowerCase()] || "from-ink/10 to-ink/5 border-ink/10";
   };
 
   const getEmotionBadge = (emotion) => {
     const colors = {
-      happy: "bg-amber-100 text-amber-700",
-      sad: "bg-blue-100 text-blue-700",
-      angry: "bg-red-100 text-red-700",
-      calm: "bg-emerald-100 text-emerald-700",
-      anxious: "bg-purple-100 text-purple-700",
-      neutral: "bg-slate-100 text-slate-700",
+      happy: "bg-sunrise/20 text-sunrise",
+      sad: "bg-lagoon/20 text-lagoon",
+      angry: "bg-roseleaf/20 text-roseleaf",
+      calm: "bg-accent/20 text-accent",
+      anxious: "bg-roseleaf/10 text-roseleaf",
+      neutral: "bg-ink/10 text-ink",
     };
-    return colors[emotion?.toLowerCase()] || "bg-slate-100 text-slate-700";
+    return colors[emotion?.toLowerCase()] || "bg-ink/10 text-ink";
   };
 
   if (!entries || entries.length === 0) {
     return (
-      <div className="flex items-center justify-center rounded-2xl border-2 border-dashed border-lagoon/20 p-12">
+      <div className="flex items-center justify-center rounded-[2rem] border-2 border-dashed border-ink/10 p-12 animate-rise">
         <div className="text-center">
-          <p className="text-lg font-semibold text-ink/70 mb-2">No journal entries yet</p>
-          <p className="text-sm text-ink/50">Start by writing your first entry above</p>
+          <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-ink/5 text-3xl mb-4">📝</div>
+          <p className="text-lg font-bold text-ink/80 mb-2">No journal entries yet</p>
+          <p className="text-sm font-medium text-ink/50">Start by writing your first entry above</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-max">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 auto-rows-max">
       {entries.map((entry) => (
         <div
           key={entry.id}
-          className={`bg-gradient-to-br ${getEmotionBgColor(entry.emotion)} rounded-2xl p-5 md:p-6 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md border border-lagoon/5 hover:border-lagoon/20 group animate-rise ${
-            selectedEntry?.id === entry.id ? "ring-2 ring-lagoon shadow-lg" : ""
+          className={`bg-gradient-to-br glass ${getEmotionBgColor(entry.emotion)} rounded-[2rem] p-5 md:p-6 cursor-pointer transition-all duration-300 hover:shadow-glass-hover hover:-translate-y-1 group animate-scaleUp ${
+            selectedEntry?.id === entry.id ? "ring-2 ring-accent shadow-glass-hover scale-[1.02]" : "shadow-glass"
           }`}
         >
           {/* Header */}
-          <div className="flex items-start justify-between gap-2 mb-3">
-            <span className={`${getEmotionBadge(entry.emotion)} rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide flex-shrink-0`}>
-              {entry.emotion}
+          <div className="flex items-start justify-between gap-2 mb-4">
+            <span className={`${getEmotionBadge(entry.emotion)} rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide flex-shrink-0 border border-current`}>
+              {entry.emotion || "neutral"}
             </span>
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
@@ -83,42 +84,45 @@ export default function JournalHistory({ entries, selectedEntry, onSelectEntry, 
                   e.stopPropagation();
                   onDeleteClick?.(entry.id);
                 }}
-                className="p-1.5 rounded-lg bg-roseleaf/10 hover:bg-roseleaf/20 text-roseleaf transition-all active:scale-95"
+                className="p-1.5 rounded-lg bg-roseleaf/10 hover:bg-roseleaf hover:text-white text-roseleaf transition-all active:scale-95 border border-transparent hover:border-transparent"
                 title="Delete entry"
               >
-                🗑
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
               </button>
             </div>
-            <span className="text-xs text-ink/50 flex-shrink-0 whitespace-nowrap">
-              {formatDate(entry.date)}
-            </span>
+          </div>
+          
+          <div className="mb-3 text-xs font-semibold text-ink/50 flex items-center justify-between">
+            <span>{formatDate(entry.date)}</span>
           </div>
 
           {/* Entry Text */}
           <p
             onClick={() => onSelectEntry(entry)}
-            className="text-sm leading-relaxed text-ink/80 mb-3 line-clamp-4 break-words"
+            className="text-[15px] leading-relaxed font-medium text-ink/90 mb-4 line-clamp-4 break-words"
           >
             {entry.text}
           </p>
 
           {/* Summary */}
-          <div
-            onClick={() => onSelectEntry(entry)}
-            className="bg-white/40 backdrop-blur-sm rounded-lg p-2.5 mb-3 border border-lagoon/10 cursor-pointer"
-          >
-            <p className="text-xs font-semibold text-lagoon/80 uppercase tracking-wider mb-1">Summary</p>
-            <p className="text-xs leading-relaxed text-ink/70 line-clamp-2">
-              {entry.summary}
-            </p>
-          </div>
+          {entry.summary && (
+            <div
+              onClick={() => onSelectEntry(entry)}
+              className="bg-surface/50 rounded-xl p-3 mb-4 border border-ink/5 cursor-pointer hover:bg-surface transition-colors"
+            >
+              <p className="text-[10px] font-bold text-ink/50 uppercase tracking-widest mb-1.5">Overview</p>
+              <p className="text-xs font-medium leading-relaxed text-ink/80 line-clamp-2">
+                {entry.summary}
+              </p>
+            </div>
+          )}
 
           {/* View Details Button */}
           <button
             onClick={() => onSelectEntry(entry)}
-            className="w-full mt-2 px-3 py-2 rounded-lg bg-white/60 hover:bg-white text-ink text-xs font-semibold uppercase tracking-wide transition-all opacity-0 group-hover:opacity-100 active:scale-95"
+            className="w-full mt-2 py-2.5 rounded-xl bg-surface hover:bg-ink text-ink hover:text-surface text-[11px] font-bold uppercase tracking-widest transition-all opacity-0 group-hover:opacity-100 active:scale-95 border border-ink/10"
           >
-            View Details →
+            Read Analysis ➔
           </button>
         </div>
       ))}

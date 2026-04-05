@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models.db_models import MoodLog
-from services.auth import decode_access_token
+from services.auth import get_current_user_id
+
 
 router = APIRouter()
 
@@ -42,34 +43,6 @@ EMOTION_SCORE = {
     "disgust": 1,
     "shame": 1,
 }
-
-
-def get_current_user_id(authorization: Optional[str] = Header(None)) -> int:
-    """Extract user_id from JWT token in Authorization header."""
-    if not authorization:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing authorization header",
-        )
-    
-    # Extract token from "Bearer <token>"
-    parts = authorization.split()
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authorization header format",
-        )
-    
-    token = parts[1]
-    token_data = decode_access_token(token)
-    
-    if not token_data or token_data.user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-        )
-    
-    return token_data.user_id
 
 
 class MoodPoint(BaseModel):
@@ -141,3 +114,33 @@ async def get_mood(
         distribution=distribution,
         weekly_summary=weekly_summary,
     )
+
+
+class EmotionLogEntry(BaseModel):
+    emotion: str
+    timestamp: datetime
+
+
+@router.get("/mood/history", response_model=List[EmotionLogEntry])
+async def get_mood_history(
+    days: int = 7,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+) -> List[EmotionLogEntry]:
+    """
+    Get emotion history for last N days (default 7).
+    Returns emotion label + timestamp.
+    Used for dashboard charts.
+    """
+    since = datetime.utcnow() - timedelta(days=days)
+    rows = (
+        db.query(MoodLog)
+        .filter(MoodLog.user_id == user_id, MoodLog.date >= since)
+        .order_by(MoodLog.date.desc())
+        .limit(500)
+        .all()
+    )
+    return [
+        EmotionLogEntry(emotion=row.emotion, timestamp=row.date)
+        for row in rows
+    ]

@@ -41,17 +41,17 @@ export default function ChatBubble({ role, message, emotion }) {
   const isUser = role === "user";
 
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"} animate-rise mb-2`}>
+    <div className={`flex ${isUser ? "justify-end" : "justify-start"} animate-slideIn mb-4`} style={{ animationDuration: '0.3s' }}>
       <div
-        className={`max-w-[85%] rounded-[1.5rem] px-5 py-4 shadow-sm md:max-w-[75%] ${
+        className={`max-w-[85%] rounded-[1.5rem] px-5 py-4 shadow-sm md:max-w-[75%] transition-all duration-300 hover:shadow-md ${
           isUser
-            ? "bg-lagoon text-white rounded-br-sm shadow-md shadow-lagoon/10"
-            : "glass text-ink rounded-bl-sm border border-lagoon/5 bg-surface/70"
+            ? "bg-accent text-white rounded-br-sm shadow-md shadow-accent/20 hover:shadow-accent/30 hover:-translate-y-0.5"
+            : "glass text-ink rounded-bl-sm border border-ink/5 hover:-translate-y-0.5"
         }`}
       >
         <p className="text-[15px] leading-relaxed whitespace-pre-wrap tracking-wide">{message}</p>
-        <div className={`mt-3 text-xs font-medium uppercase tracking-wider flex items-center gap-1.5 ${isUser ? 'text-white/70' : 'text-lagoon/70'}`}>
-          <span>{EMOJI_BY_EMOTION[emotion] || "🫶"}</span>
+        <div className={`mt-3 text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 ${isUser ? 'text-white/80' : 'text-accent'}`}>
+          <span className="text-sm">{EMOJI_BY_EMOTION[emotion] || "🫶"}</span>
           <span>{emotion || "unknown"}</span>
         </div>
       </div>

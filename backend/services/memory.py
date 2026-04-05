@@ -5,7 +5,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 def build_conversation_memory(history_rows: list[dict]) -> ConversationBufferMemory:
     memory = ConversationBufferMemory(return_messages=True, memory_key="chat_history")
 
-    for row in history_rows[-10:]:
+    for row in history_rows[-50:]:
         role = row.get("role", "user")
         content = row.get("message", "")
         if not content:

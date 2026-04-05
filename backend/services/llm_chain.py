@@ -8,6 +8,7 @@ from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_groq import ChatGroq
 from langchain.tools import Tool
+from langchain.schema import SystemMessage, HumanMessage, AIMessage
 
 from services.prompt_builder import (
     BASE_SYSTEM_RULES,
@@ -144,38 +145,94 @@ class LangChainGroqService:
         patterns: List[str],
         tone: str,
         history_text: str,
+        memory_context: str = "",
+        short_reply_context: str = "",
+        chat_history: List[Dict] = None,
     ) -> str:
+        """
+        Run chat chain using proper LangChain message objects.
+        
+        Args:
+            user_message: Current user input
+            emotion: Detected emotion
+            emotion_confidence: Confidence score (0-1)
+            intent: User intent classification
+            patterns: Detected patterns
+            tone: Tone guidance
+            history_text: Not used (kept for backward compatibility)
+            memory_context: Semantic context from past interactions
+            short_reply_context: Special context for short replies
+            chat_history: List of previous messages [{"role": "user"/"assistant", "message": "..."}]
+        """
         if self.llm is None:
             logger.warning("LLM is None - returning fallback response")
             return "I am here with you. Share a little more, and we can take this one step at a time."
 
-        logger.info(f"=== CHAT CHAIN DEBUG ===")
+        if chat_history is None:
+            chat_history = []
+
+        logger.info(f"=== CHAT CHAIN (MESSAGE-BASED) ===")
         logger.info(f"User Message: {user_message[:100]}")
         logger.info(f"Emotion: {emotion}")
-        logger.info(f"History Text: {history_text[:200]}")
+        logger.info(f"Is Short Reply: {bool(short_reply_context)}")
+        logger.info(f"Memory Context Length: {len(memory_context)}")
         
-        chain = LLMChain(llm=self.llm, prompt=self.chat_prompt)
-        logger.info(f"Prompt Template: {self.chat_prompt.template[:200]}")
-        logger.info(f"Prompt Input Variables: {self.chat_prompt.input_variables}")
+        # Build message array
+        messages = []
         
-        response = await chain.apredict(
-            system_rules=BASE_SYSTEM_RULES,
-            datetime_context=get_current_datetime_context(),
-            emotion=emotion,
-            emotion_confidence=round(emotion_confidence, 3),
-            intent=intent,
-            patterns=", ".join(patterns) if patterns else "none",
-            tone=tone,
-            history=history_text,
-            user_message=user_message,
+        # 1. System prompt with base rules
+        messages.append(SystemMessage(content=BASE_SYSTEM_RULES))
+        
+        # 2. Inject memory/context as system messages
+        if memory_context and memory_context != "No prior conversation history.":
+            messages.append(SystemMessage(content=f"Relevant context from past interactions:\n{memory_context}"))
+        
+        # 3. Add emotion and tone context
+        emotion_context = (
+            f"Current user state:\n"
+            f"- Detected emotion: {emotion} (confidence: {round(emotion_confidence * 100, 0)}%)\n"
+            f"- Intent: {intent}\n"
+            f"- Tone guidance: {tone}\n"
+            f"- Patterns: {', '.join(patterns) if patterns else 'none'}\n"
+            f"{get_current_datetime_context()}"
         )
-        logger.info(f"Raw LLM Response: {response[:200]}")
-        result = self._limit_words(response.strip(), 100)
-        logger.info(f"Final Response: {result[:200]}")
-        logger.info(f"=== END CHAT CHAIN DEBUG ===")
-        return result
+        messages.append(SystemMessage(content=emotion_context))
+        
+        # 4. Add short reply context if applicable
+        if short_reply_context:
+            messages.append(SystemMessage(content=short_reply_context))
+        
+        # 5. Add conversation history as structured messages
+        for msg in chat_history:
+            if msg.get("role") == "user":
+                messages.append(HumanMessage(content=msg.get("message", "")))
+            elif msg.get("role") == "assistant":
+                messages.append(AIMessage(content=msg.get("message", "")))
+        
+        # 6. Current user input
+        messages.append(HumanMessage(content=user_message))
+        
+        logger.info(f"Total messages in array: {len(messages)}")
+        logger.info(f"Message roles: {[type(m).__name__ for m in messages]}")
+        
+        try:
+            # Use invoke instead of apredict for native message handling
+            response = await self.llm.ainvoke(messages)
+            result = self._limit_words(response.content.strip(), 100)
+            logger.info(f"LLM Response: {result[:200]}")
+            logger.info(f"=== END CHAT CHAIN ===")
+            return result
+        except Exception as e:
+            logger.exception(f"Chat chain failed: {e}")
+            return "I am here with you. Share a little more, and we can take this one step at a time."
 
-    async def run_journal_chain(self, text: str, emotion: str) -> Dict[str, str]:
+    async def run_journal_chain(
+        self,
+        text: str,
+        emotion: str,
+        journal_context: str = "",
+        emotion_confidence: float = 0.5
+    ) -> Dict[str, str]:
         fallback = {
             "summary": "You had an emotionally meaningful day with mixed feelings.",
             "insight": "Your entry suggests a need for self-kindness and emotional balance.",
@@ -189,7 +246,9 @@ class LangChainGroqService:
         raw = await chain.apredict(
             system_rules=BASE_SYSTEM_RULES,
             emotion=emotion,
+            emotion_confidence=round(emotion_confidence * 100, 0),
             tone=get_emotion_tone(emotion),
+            journal_context=journal_context,
             text=text,
         )
 

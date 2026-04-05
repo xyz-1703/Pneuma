@@ -12,39 +12,74 @@ import {
   Legend,
 } from "recharts";
 
-const COLORS = ["#6B9080", "#F6BD60", "#E5989B", "#84A59D", "#F28482"];
+const COLORS = [
+  "rgb(var(--accent))",
+  "rgb(var(--lagoon))",
+  "rgb(var(--sunrise))",
+  "rgb(var(--roseleaf))",
+  "rgba(var(--ink), 0.5)"
+];
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-surface/90 backdrop-blur-md border border-ink/10 p-3 rounded-xl shadow-lg">
+        <p className="text-[13px] font-bold text-ink mb-1">{label}</p>
+        {payload.map((entry, index) => (
+          <p key={index} className="text-[14px] font-bold" style={{ color: entry.color }}>
+            {entry.name}: {entry.value}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 export default function MoodChart({ timeline, distribution }) {
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <div className="glass rounded-2xl p-4">
-        <h3 className="mb-3 font-heading text-base font-semibold">Mood Over Time</h3>
-        <div className="h-72">
+    <div className="grid gap-6 md:grid-cols-2">
+      <div className="glass rounded-[2.5rem] p-6 shadow-glass border border-ink/5 hover:shadow-glass-hover transition-all animate-scaleUp" style={{ animationDelay: '0.1s' }}>
+        <h3 className="mb-6 font-heading text-xl font-bold text-ink">Mood Over Time</h3>
+        <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={timeline}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E8EFEA" />
-              <XAxis dataKey="date" stroke="#2C3E50" />
-              <YAxis domain={[1, 5]} stroke="#2C3E50" />
-              <Tooltip
-                contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}
+            <LineChart data={timeline} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(var(--ink), 0.1)" vertical={false} />
+              <XAxis 
+                dataKey="date" 
+                stroke="rgba(var(--ink), 0.5)" 
+                fontSize={12} 
+                tickMargin={10} 
+                axisLine={false} 
+                tickLine={false} 
               />
-              <Legend />
+              <YAxis 
+                domain={[1, 5]} 
+                stroke="rgba(var(--ink), 0.5)" 
+                fontSize={12} 
+                axisLine={false} 
+                tickLine={false} 
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend wrapperStyle={{ paddingTop: "20px" }} iconType="circle" />
               <Line
                 type="monotone"
                 dataKey="mood_score"
-                stroke="#6B9080"
-                strokeWidth={3}
-                dot={{ r: 4, fill: "#6B9080" }}
+                stroke="rgb(var(--accent))"
+                strokeWidth={4}
+                dot={{ r: 5, fill: "rgb(var(--accent))", strokeWidth: 0 }}
+                activeDot={{ r: 7, strokeWidth: 0 }}
                 name="Mood score"
+                animationDuration={1500}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div className="glass rounded-2xl p-4">
-        <h3 className="mb-3 font-heading text-base font-semibold">Emotion Distribution</h3>
-        <div className="h-72">
+      <div className="glass rounded-[2.5rem] p-6 shadow-glass border border-ink/5 hover:shadow-glass-hover transition-all animate-scaleUp" style={{ animationDelay: '0.2s' }}>
+        <h3 className="mb-6 font-heading text-xl font-bold text-ink">Emotion Distribution</h3>
+        <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -53,14 +88,24 @@ export default function MoodChart({ timeline, distribution }) {
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                outerRadius={90}
-                label
+                outerRadius={100}
+                innerRadius={60}
+                paddingAngle={5}
+                labelLine={false}
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                animationDuration={1500}
               >
                 {distribution.map((entry, index) => (
-                  <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+                  <Cell 
+                    key={entry.name} 
+                    fill={COLORS[index % COLORS.length]} 
+                    stroke="rgba(var(--surface), 0.5)"
+                    strokeWidth={2}
+                  />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend wrapperStyle={{ paddingTop: "10px" }} iconType="circle" />
             </PieChart>
           </ResponsiveContainer>
         </div>
