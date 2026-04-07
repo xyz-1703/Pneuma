@@ -83,11 +83,12 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Update dist folder served by Nginx
+# Update dist folder served by Nginx (copy to /var/www/pneuma where Nginx expects it)
 log_info "Updating Nginx static files..."
-rm -rf "$APP_DIR/frontend/dist"
-cp -r dist "$APP_DIR/frontend/"
-chown -R www-data:www-data "$APP_DIR/frontend/dist"
+sudo rm -rf /var/www/pneuma
+sudo mkdir -p /var/www/pneuma
+sudo cp -r dist/* /var/www/pneuma/
+sudo chown -R www-data:www-data /var/www/pneuma
 
 # Step 4: Restart services
 log_info "Restarting services..."
