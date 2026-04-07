@@ -1,0 +1,57 @@
+name: Deploy to VM
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to VM via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_PORT || 22 }}
+          script: |
+            cd /home/azureuser/Pneuma
+            git pull origin main
+            
+            # Backend deployment
+            cd backend
+            /home/azureuser/Pneuma/venv/bin/pip install -r requirements.txt --quiet
+            
+            # Database migrations (if any)
+            /home/azureuser/Pneuma/venv/bin/python -c "from database import engine, Base; from models.db_models import *; Base.metadata.create_all(bind=engine)"
+            
+            # Frontend deployment
+            cd ../frontend
+            npm install --silent
+            npm run build
+            
+            # Update dist folder served by Nginx
+            sudo rm -rf /home/azureuser/Pneuma/frontend/dist
+            sudo cp -r dist /home/azureuser/Pneuma/frontend/
+            sudo chown -R www-data:www-data /home/azureuser/Pneuma/frontend/dist
+            
+            # Restart services
+            sudo systemctl restart pneuma-backend.service
+            
+            echo "✅ Deployment completed successfully"
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ Deployment successful"
+          else
+            echo "❌ Deployment failed"
+          fi

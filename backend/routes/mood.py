@@ -25,6 +25,10 @@ EMOTION_SCORE = {
     "pride": 4,
     "relief": 4,
     "caring": 4,
+    "happy": 5,         # mapped from joy, love, etc.
+    "sad": 2,           # mapped from sadness, etc.
+    "angry": 1,         # mapped from anger, etc.
+    "anxious": 2,       # mapped from fear, nervousness
     "surprise": 3,
     "curiosity": 3,
     "realization": 3,

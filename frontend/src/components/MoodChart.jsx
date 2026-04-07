@@ -88,8 +88,8 @@ export default function MoodChart({ timeline, distribution }) {
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                outerRadius={100}
-                innerRadius={60}
+                outerRadius={80}
+                innerRadius={50}
                 paddingAngle={5}
                 labelLine={false}
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}

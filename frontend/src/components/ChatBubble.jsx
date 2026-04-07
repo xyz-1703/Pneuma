@@ -50,10 +50,6 @@ export default function ChatBubble({ role, message, emotion }) {
         }`}
       >
         <p className="text-[15px] leading-relaxed whitespace-pre-wrap tracking-wide">{message}</p>
-        <div className={`mt-3 text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 ${isUser ? 'text-white/80' : 'text-accent'}`}>
-          <span className="text-sm">{EMOJI_BY_EMOTION[emotion] || "🫶"}</span>
-          <span>{emotion || "unknown"}</span>
-        </div>
       </div>
     </div>
   );
