@@ -130,3 +130,32 @@ A full-stack mental wellness application combining emotion-aware AI conversation
 | GET | `/journal` | Get all journal entries |
 | GET | `/mood` | Get mood analytics & dashboard data |
 | GET | `/health` | Service health check |
+
+---
+
+## Screenshots
+
+### 🔐 Authentication
+<div style="display: flex; gap: 20px; margin: 20px 0;">
+  <img src="screenshots/Create_account_ss.png" alt="Sign Up" width="48%" />
+  <img src="screenshots/Sign_in_ss.png" alt="Sign In" width="48%" />
+</div>
+
+**Sign Up & Sign In** - Glassmorphic authentication screens with Google OAuth integration
+
+### 💬 Emotional Chat
+<img src="screenshots/Chat_ss.png" alt="Chat Interface" width="100%" style="margin: 20px 0;" />
+
+**Real-time AI Chat** - Emotion-aware conversations with memory and contextual responses
+
+### 📔 Journaling with AI Insights
+<img src="screenshots/Journal_ss.png" alt="Journal Page" width="100%" style="margin: 20px 0;" />
+
+**Smart Journal** - Write entries and receive AI-generated summaries, insights, and personalized suggestions
+
+### 📊 Mood Analytics Dashboard
+<img src="screenshots/Dashboard_ss.png" alt="Dashboard" width="100%" style="margin: 20px 0;" />
+
+**Emotional Analytics** - Track mood trends with 7-day tracker, line charts, emotion distribution pie chart, and weekly insights
+
+---
