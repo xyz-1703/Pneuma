@@ -1,120 +1,132 @@
-# Pneuma: Safe AI Emotional Chat and Journal Platform
+# Pneuma: Mental Wellness AI Chat & Journal Platform
 
-A full-stack mental wellness application with emotion-aware AI chat, journaling insights, mood analytics, and a premium glassmorphic UI.
+A full-stack mental wellness application combining emotion-aware AI conversations, journaling with AI-generated insights, mood analytics, and crisis intervention protocols.
 
-## Pneuma Architecture & Workflow
+**Live:** https://mental-wellness.duckdns.org/
 
-This breaks down the end-to-end user journey and internal features of the Pneuma Mental Wellness Application.
+---
 
-### 1. Authentication & Onboarding
-Users begin by registering or logging in via the glassmorphic Auth screen. Authentication generates secure token pairings in the backend database allowing the frontend to make authenticated requests to private APIs on behalf of the user.
+## Features
 
-### 2. The Chat Experience
-The primary conversational interface involves a cycle of emotion detection and contextual AI response.
-1. **Input:** The user types a message in the Chat.
-2. **Safety Check & Crisis Protocols:** The backend router first screens the incoming text for crisis keywords (self-harm, suicide). If detected, it immediately short-circuits the LLM and returns emergency resources. Additionally, there is an immediate visual "Crisis Help" integration linking to primary Indian mental health helplines alongside emergency protocol triggers.
-3. **Emotion Classification:** The message is passed through an open-source Hugging Face Transformers model (`j-hartmann/emotion-english-distilroberta-base`) to accurately tag the user's current emotional state.
-4. **Context Retrieval:** The `memory.py` service retrieves the last 10 messages along with their vector embeddings from the database to ensure conversational continuity.
-5. **AI Generation:** The context, current message, and detected emotion are bundled via LangChain into a strict prompt and sent to the Groq API (LLaMA inference).
-6. **Delivery:** The empathetic response is rendered on the frontend using dynamic theme-aware chat bubbles.
+### 🗣️ Emotion-Aware AI Chat
+- Real-time chat with emotionally intelligent AI responses
+- Automatic emotion detection using Hugging Face Transformers
+- Context-aware conversations with memory of previous interactions
+- AI responses powered by Groq (LLaMA inference)
+- Crisis detection with emergency helpline resources
 
-### 3. Deep Reflection (Journaling)
-The Journal provides a place for long-form private reflection.
-1. **Submission:** A user writes an entry and submits the form.
-2. **Tri-fold Analysis:** The backend LLM is prompted differently than chat. It structurally dissects the journal entry into three keys:
-   - *Summary*: What the user wrote.
-   - *Insight*: The underlying psychological patterns.
-   - *Suggestion*: Actionable, realistic advice.
-3. **Storage:** The overarching emotion extracted from the entry is sent to the centralized `mood_logs` table to impact analytics.
+### 📔 Smart Journaling
+- Write private journal entries with automatic AI analysis
+- Three-fold analysis for each entry:
+  - **Summary**: What you wrote
+  - **Insight**: Psychological patterns & underlying themes
+  - **Suggestion**: Actionable, personalized advice
 
-### 4. Emotional Analytics (Dashboard)
-Every valid interaction (chat or journal) deposits emotional metadata into the user's timeline.
-1. **Aggregation:** The `/mood` API gathers all logs for the authenticated user.
-2. **Visualization:** 
-   - A **7-Day Mood Tracker** visualizes short-term trajectory using color-coded severity blocks.
-   - **Line & Pie Charts** (powered by Recharts) visualize emotional distributions and long-term mood scores.
-3. **Weekly Insight:** Groq computes a generalized assessment of the user's emotional data for the week to give concluding advice.
+### 📊 Emotional Analytics Dashboard
+- **7-Day Mood Tracker**: Color-coded severity visualization of mood trajectory
+- **Line Chart**: Track overall mood trends over time
+- **Pie Chart**: Emotional distribution analysis
+- **Weekly Insight**: AI-generated summary of emotional patterns
+- Real-time mood scoring based on detected emotions
 
-### 5. UI/UX Theming System
-- **Four Premium UI Themes**: Instantly switchable color modes (Midnight Gold, Ocean Glow, Sunset Aura, Aurora Neon).
-- The entire application relies on a React context + CSS variable bridge. By selecting a theme, the root `data-theme` is injected into the DOM, instantly dynamically rewriting all background gradients, chart colors, box shadows, and text colors without full page reloads.
+### 🎨 Premium Theme System
+- Four instantly-switchable UI themes:
+  - Midnight Gold
+  - Ocean Glow
+  - Sunset Aura
+  - Aurora Neon
+- Dynamic CSS variable system for seamless theme transitions
 
-## Backend Setup
+### 🔐 Security & Authentication
+- JWT-based authentication with refresh token rotation
+- Secure password hashing with bcrypt
+- OAuth 2.0 support (Google, GitHub)
+- Session management with 24-hour auto-logout
 
-1. Create and activate a virtual environment from the project root:
+### 🗄️ Data Persistence
+- PostgreSQL database with pgvector support for semantic search
+- Vector embeddings for message similarity detection
+- Efficient mood log aggregation and analytics
+- Automatic backup system
 
-```bash
-python -m venv venv
-venv\Scripts\activate
-```
+---
 
-2. Open terminal in backend directory.
-3. Install dependencies:
+## How It Works
 
-```bash
-pip install -r requirements.txt
-```
+### Authentication Flow
+1. User registers/logs in via glassmorphic Auth screen
+2. Backend generates secure JWT token pairs
+3. All subsequent API requests authorized via tokens
 
-This installs FastAPI, Uvicorn, SQLAlchemy, psycopg2, Transformers, Torch, LangChain, LangChain Community, LangChain Groq, and Groq SDK.
+### Chat Workflow
+1. **User Input**: Message sent to API
+2. **Safety Check**: Screens for crisis keywords (self-harm, suicide)
+   - If detected: Immediate redirect to emergency resources & Indian mental health helplines
+3. **Emotion Detection**: DistilRoBERTa model classifies user's emotional state
+4. **Context Retrieval**: Previous 10 messages with embeddings retrieved for continuity
+5. **AI Response**: LangChain + Groq generates empathetic, contextual response
+6. **Rendering**: Response displayed with theme-aware styling
 
-4. Copy environment file and add your Groq key:
+### Journal Workflow
+1. User writes long-form entry
+2. Backend analyzes entry via LLM:
+   - Extracts emotion
+   - Generates summary, insight, and personalized suggestion
+3. Analysis stored with emotional metadata
+4. Emotion logged for dashboard analytics
 
-```bash
-copy .env.example .env
-```
+### Analytics Pipeline
+1. Every chat/journal interaction logs emotion to `mood_logs`
+2. Dashboard aggregates logs by date and emotion type
+3. Mood scores calculated (1-5 scale based on emotion intensity)
+4. Charts render real-time visualizations
+5. Weekly summary generated from last 7 days of data
 
-5. Start backend server:
+### Crisis Protocol
+- Real-time keyword detection for crisis indicators
+- Immediate response with emergency resources
+- Visual crisis modal with Indian mental health helplines:
+  - AASRA: 9820466726
+  - iCall: 9152987821
+  - Vandrevala Foundation: 9999 666 555
+- No LLM delay - safety-first response
 
-```bash
-uvicorn main:app --reload --port 8000
-```
+---
 
-Backend runs on http://127.0.0.1:8000.
+## Technology Stack
 
-## Frontend Setup
+**Backend**
+- FastAPI (async REST API)
+- SQLAlchemy (ORM)
+- PostgreSQL (relational database)
+- pgvector (semantic search)
+- Transformers (emotion detection)
+- LangChain (LLM orchestration)
+- Groq API (LLaMA inference)
 
-1. Open terminal in frontend directory.
-2. Install dependencies:
+**Frontend**
+- React + Vite (SPA)
+- Tailwind CSS (styling)
+- Recharts (analytics)
+- Axios (HTTP client)
 
-```bash
-npm install
-```
+**DevOps**
+- GitHub Actions (CI/CD auto-deployment)
+- Nginx (reverse proxy)
+- Gunicorn (WSGI server)
+- Let's Encrypt (SSL/TLS)
 
-This installs React (Vite), axios, tailwindcss, and recharts.
-
-3. Copy environment file:
-
-```bash
-copy .env.example .env
-```
-
-4. Start frontend:
-
-```bash
-npm run dev
-```
-
-Frontend runs on http://127.0.0.1:5173.
+---
 
 ## API Endpoints
 
-- POST /chat
-  - Input: { user_id, message }
-  - Output: { response, emotion, assistant_emotion }
-- GET /chat/history?user_id=1
-  - Output: list of stored chat messages
-- POST /journal
-  - Input: { user_id, text }
-  - Output: { emotion, summary, insight, suggestion }
-- GET /mood?user_id=1
-  - Output: timeline, distribution, weekly_summary
-
-## Notes
-
-- If GROQ_API_KEY is missing, fallback supportive responses are used.
-- SQLite file is created automatically when the backend starts.
-- To use PostgreSQL, set DATABASE_URL, for example:
-
-```text
-DATABASE_URL=postgresql+psycopg2://user:password@localhost:5432/safe_ai
-```
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| POST | `/auth/register` | User registration |
+| POST | `/auth/login` | User login |
+| POST | `/chat` | Send message & get AI response |
+| GET | `/chat/history` | Get chat message history |
+| POST | `/journal` | Submit journal entry |
+| GET | `/journal` | Get all journal entries |
+| GET | `/mood` | Get mood analytics & dashboard data |
+| GET | `/health` | Service health check |
